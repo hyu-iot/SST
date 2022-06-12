@@ -1,5 +1,14 @@
-
-
+#include "c_crypto.h"
+/*
+    function:
+    input:
+    output:
+*/
+/*
+    function: prints error message
+    input: Error message to display
+    output: input message & openssl error
+*/
 void print_last_error(char *msg){
     char * err = malloc(130);;
     ERR_load_crypto_strings();
@@ -8,7 +17,14 @@ void print_last_error(char *msg){
     free(err);
 }
 
-int public_encrypt(unsigned char * data, int data_len, unsigned char *encrypted, int padding, char * path) {
+//TODO: 영빈이형 여기 check input 순서 맞추려고 input 순서 바꿈. 확인시 지워줭.
+
+/*
+    function: read X509cert.pem file & get pubkey from 'path'. RSA_public_encrypt 'data' to 'ret' with 'padding'
+    input: 'ret': encrypted buf, 'data': data to encrypt
+    output: length of encrypted data
+*/
+int public_encrypt(unsigned char *ret, unsigned char * data, int * data_len,  int padding, char * path) {
     FILE *pemFile = fopen(path, "rb");
     X509 *cert = PEM_read_X509(pemFile, NULL, NULL, NULL );
     EVP_PKEY *pkey = X509_get_pubkey(cert);
@@ -23,7 +39,7 @@ int public_encrypt(unsigned char * data, int data_len, unsigned char *encrypted,
     if ( rsa == NULL ) {
         print_last_error("EVP_PKEY_get1_RSA fail");
     }
-    int result = RSA_public_encrypt(data_len,data,encrypted, rsa,padding);
+    int result = RSA_public_encrypt(*data_len, data, ret, rsa, padding);
     if(result == -1){ // RSA_public_encrypt() returns -1 on error
         print_last_error("Public Encrypt failed!\n");
         exit(0);
@@ -34,14 +50,20 @@ int public_encrypt(unsigned char * data, int data_len, unsigned char *encrypted,
     return result; // RSA_public_encrypt() returns the size of the encrypted data 
 }
 
+//TODO: 영빈이형 여기도 순서 바뀌었엉
 
-int private_decrypt(unsigned char * enc_data,int data_len, unsigned char *decrypted, int padding, char * path){
+/*
+    function: read PEM key from 'path'. RSA_Private_decrypt 'encrypted' and save in 'ret' with 'padding'
+    input: 'ret': decrypted result buf, 'enc_data': data to decrypt
+    output: return decrypted length
+*/
+int private_decrypt(unsigned char *ret, unsigned char * enc_data, int * enc_data_len, int padding, char * path){
 
     FILE *keyfile = fopen(path, "rb"); 
     RSA *rsa = PEM_read_RSAPrivateKey(keyfile, NULL, NULL, NULL);
     RSA *PEM_read_RSAPublicKey(FILE *fp, RSA **x,
                                         pem_password_cb *cb, void *u);
-    int result = RSA_private_decrypt(data_len,enc_data,decrypted,rsa,padding);
+    int result = RSA_private_decrypt(*enc_data_len, enc_data, ret, rsa, padding);
     if(result == -1){  // RSA_private_decrypt() returns -1 on error
         print_Last_error("Private Decrypt failed!");
         exit(0);
@@ -52,7 +74,12 @@ int private_decrypt(unsigned char * enc_data,int data_len, unsigned char *decryp
     return result;
 }
 
-void sign(unsigned char *sigret, unsigned int * sigret_length, unsigned char *encrypted, unsigned int encrypted_length, char * path){
+/*
+    function: make sign to 'sigret' buf, with private key from 'path', and data 'encrypted' 
+    input:'sigret': return signed buf, 'encrypted': data to sign
+    output: 
+*/
+void SHA256_sign(unsigned char *sigret, unsigned int * sigret_length, unsigned char *encrypted, unsigned int *encrypted_length, char * path){
 
     FILE *keyfile = fopen(path, "rb"); 
     RSA *rsa = PEM_read_RSAPrivateKey(keyfile, NULL, NULL, NULL);
@@ -67,8 +94,13 @@ void sign(unsigned char *sigret, unsigned int * sigret_length, unsigned char *en
         print_Last_error("Sign failed! \n");
 }
 
+/*
+    function: Checks if sign and data verified. needs to digest message.
+    input:
+    output: error when verify fails
+*/
 //TODO: 동하가 고치기
-void verify(signed_data *distribution_key_buf, char * path){
+void SHA256_verify(unsigned char * data, unsigned int * data_length, unsigned char * sign, unsigned int * sign_length, signed_data *distribution_key_buf, char * path){
     FILE *pemFile = fopen(path, "rb");
     X509 *cert = PEM_read_X509( pemFile, NULL, NULL, NULL );
     EVP_PKEY *pkey = X509_get_pubkey(cert);
@@ -84,15 +116,26 @@ void verify(signed_data *distribution_key_buf, char * path){
         print_Last_error("EVP_PKEY_get1_RSA fail");
     }
     // verify! 
-    unsigned char distribution_key_buf_dig[SHA256_DIGEST_LENGTH];
-    make_digest_msg(distribution_key_buf_dig, distribution_key_buf->data, distribution_key_buf->data_length);
+    unsigned char digest_buf[SHA256_DIGEST_LENGTH];
+    make_digest_msg(digest_buf, data, data_length);
     // RSA * rsa2 = create_RSA(authPublicKey,true);   
-    int verify_result = RSA_verify(NID_sha256, distribution_key_buf_dig,SHA256_DIGEST_LENGTH,
-          distribution_key_buf->sign, distribution_key_buf->sign_length, rsa);
+    int verify_result = RSA_verify(NID_sha256, digest_buf,SHA256_DIGEST_LENGTH,
+          sign, sign_length, rsa);
 
     if(verify_result ==1)
         printf("verify success\n\n");
     else{
         print_Last_error("verify failed\n");
     }
+}
+/*
+    function: make SHA256 digest message
+    input:
+    output:
+*/
+void SHA256_make_digest_msg(unsigned char *dig_enc, unsigned char *encrypted ,int encrypted_length){
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, encrypted, encrypted_length); 
+    SHA256_Final(dig_enc, &ctx);   
 }

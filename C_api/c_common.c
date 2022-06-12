@@ -1,13 +1,15 @@
-void print_buf(unsigned char * print_buf, int n)
+#include "c_common.h"
+
+void print_buf(unsigned char * buf, int n)
 {
     for(int i=0 ; i<n; i++)
-        printf("%x  ", print_buf[i]);
+        printf("%x  ", buf[i]);
     printf("\n");
 }
 
-void generate_nonce(unsigned char * nonce_buf, int size_n)  // nonce generator;
+void generate_nonce(unsigned char * buf, int length)  // nonce generator;
 {
-    int x = RAND_bytes(nonce_buf,size_n);
+    int x = RAND_bytes(buf, length);
     if(x == -1)
     {
         printf("Failed to create Random Nonce");
@@ -23,17 +25,21 @@ void write_in_n_bytes(unsigned char * buf, int num, int n)
         }
 }
 
-unsigned int read_variable_UInt(unsigned char * buf, int byteLength)
+unsigned int read_variable_UInt(unsigned char * buf, int byte_length)
 {
     int num =0;
-    for(int i =0; i<byteLength;i++)
+    for(int i =0; i<byte_length;i++)
     {
-        num |= buf[i]<< 8*(byteLength-1-i);
+        num |= buf[i]<< 8*(byte_length-1-i);
     }
     return num; 
 }
 
-//  return: payload buf length
+/*  
+    function: (0,127) = 1, [128, 128^2] = 2, [128^2, 128^3] = 3 ..... 
+    input: integer buffer to change
+    return: payload_buf_length
+*/
 unsigned int payload_buf_length(int b)
 {   
     int n = 1;
