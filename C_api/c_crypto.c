@@ -100,7 +100,7 @@ void SHA256_sign(unsigned char *sigret, unsigned int * sigret_length, unsigned c
     output: error when verify fails
 */
 //TODO: 동하가 고치기
-void SHA256_verify(unsigned char * data, unsigned int * data_length, unsigned char * sign, unsigned int * sign_length, signed_data *distribution_key_buf, char * path){
+void SHA256_verify(unsigned char * data, unsigned int * data_length, unsigned char * sign, unsigned int * sign_length, char * path){
     FILE *pemFile = fopen(path, "rb");
     X509 *cert = PEM_read_X509( pemFile, NULL, NULL, NULL );
     EVP_PKEY *pkey = X509_get_pubkey(cert);
