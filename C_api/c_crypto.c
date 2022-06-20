@@ -139,3 +139,22 @@ void SHA256_make_digest_msg(unsigned char *dig_enc, unsigned char *encrypted ,in
     SHA256_Update(&ctx, encrypted, encrypted_length); 
     SHA256_Final(dig_enc, &ctx);   
 }
+
+void AES_CBC_128_encrypt(unsigned char * ret, unsigned int * ret_length, unsigned char * plaintext, unsigned int plaintext_length, unsigned char * key, unsigned int key_length, unsigned char * iv, unsigned int iv_length){ 
+    unsigned char iv_temp[16];
+    memcpy(iv_temp, iv, 16);
+    AES_KEY enc_key_128;
+    if(AES_set_encrypt_key(key, 128, &enc_key_128) < 0){
+        error_handling("AES key setting failed!") ;
+    }; 
+    AES_cbc_encrypt(plaintext, ret, plaintext_length , &enc_key_128, iv_temp, AES_ENCRYPT);  //iv °¡ ¹Ù²ï´Ù.
+    *ret_length = ((plaintext_length) +iv_length)/iv_length *iv_length;
+}
+void AES_CBC_128_decrypt(unsigned char * ret, unsigned int * ret_length, unsigned char * encrypted, unsigned int encrypted_length, unsigned char * key, unsigned int key_length, unsigned char  * iv, unsigned int iv_length){ 
+    AES_KEY enc_key_128;
+    if(AES_set_decrypt_key(key, 128, &enc_key_128) < 0){
+        error_handling("AES key setting failed!") ;
+    }; 
+    AES_cbc_encrypt(encrypted, ret, encrypted_length, &enc_key_128, iv, AES_DECRYPT); //iv°¡ ¹Ù²ï´Ù??
+    *ret_length = ((encrypted_length) +iv_length)/iv_length *iv_length;
+}
