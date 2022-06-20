@@ -32,6 +32,7 @@ void print_buf(unsigned char * print_buffer, int n);
 void generate_nonce(unsigned char * nonce_buf, int size_n);
 void write_in_n_bytes(unsigned char * buffer, int num, int n);
 void hello_dongha(int asd, int vid);
+void temptemp(int hi);
 
 
 
