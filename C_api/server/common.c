@@ -313,16 +313,15 @@ void symmetric_encrypt_authenticate(UCHAR * ret, UINT * ret_length, UCHAR * buf,
     generate_nonce(iv, iv_length);
     UINT test_length = ((buf_length/iv_length)+1)*16;
     printf("test_length: %d", test_length);
-    unsigned int encrypted_length = ((buf_length/iv_length)+1)*16;
-    unsigned char * encrypted = (unsigned char *) malloc(encrypted_length);
+    unsigned int encrypted_length = ((buf_length/iv_length)+1)*16;(unsigned char * buf, unsigned int buf_length, unsigned char * mac_key, unsigned char * cipher_key, unsigned char * ret, unsigned int *ret_length){ //TODO: add options.distributionCryptoSpec, TODO: may need to change sturct
     // UCHAR encrypted[512];
     // UINT encrypted_length;
     AES_CBC_128_encrypt(encrypted, &encrypted_length, buf, buf_length, symmetric_key_set->cipher_key_val, symmetric_key_set->cipher_key_val_length,iv, iv_length);
     printf("encrypted_length: %d\nbuf_length: %d\n", encrypted_length, buf_length);
     unsigned int temp_length = ((buf_length/iv_length)+1)*16 + 16;
     unsigned char * temp = (unsigned char *) malloc(temp_length);
-    unsigned int testt = sizeof(temp);
-    printf("sizeof(temp): %d \n", testt);
+    // unsigned int testt = sizeof(temp);
+    // printf("sizeof(temp): %d \n", testt);
     // UCHAR temp[512];
     // UINT temp_length;
     memcpy(temp, iv, iv_length);
