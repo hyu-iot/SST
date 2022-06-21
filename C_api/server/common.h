@@ -133,9 +133,12 @@ void * scan_command();
 
 //make header + payload
 
-void num_to_var_length_int(payload_length_t *buf);
+void num_to_var_length_int_t(payload_length_t *buf);
+void num_to_var_length_int(unsigned int data_length, unsigned char * payload_buf, unsigned char * buf_len);
 void var_length_int_to_num(UCHAR * buf, UINT buf_length, payload_length_t * payload_length, int offset);
-void make_buffer_header(UCHAR *header, UINT * header_length, UCHAR *payload, UINT payload_length, UCHAR MESSAGE_TYPE);
+void var_length_int_to_num_t(unsigned char * buf, unsigned int buf_length, unsigned int * payload_length, unsigned int * payload_buf_length);
+void make_buffer_header_t(UCHAR *header, UINT * header_length, UCHAR *payload, UINT payload_length, UCHAR MESSAGE_TYPE);
+void make_buffer_header(unsigned char *header, unsigned int * header_length, unsigned char *data, unsigned int data_length, unsigned char MESSAGE_TYPE);
 void concat_buffer_header_and_payload(UCHAR *ret, UINT * ret_length, UCHAR *header, UINT header_length, UCHAR *payload, UINT payload_length);
 void make_sender_buf(UCHAR *sender, UINT * sender_length, UCHAR *payload, UINT payload_length, UCHAR MESSAGE_TYPE);
 

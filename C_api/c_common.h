@@ -27,8 +27,26 @@
 #include <openssl/hmac.h>
 #include <pthread.h>
 
-void print_buf(unsigned char * print_buffer, int n);
-void generate_nonce(unsigned char * nonce_buf, int size_n);
-void write_in_n_bytes(unsigned char * buffer, int num, int n);
+#define MESSAGE_TYPE_SIZE 1
+#define MAX_PAYLOAD_BUF_SIZE 5
+
+
+void print_buf(unsigned char * buf, int n);
+void generate_nonce(int length, unsigned char * buf);
+void write_in_n_bytes(int num, int n, unsigned char * buf);
+unsigned int read_variable_unsigned_int(unsigned char * buf, int byte_length);
+
+
+
+void var_length_int_to_num(unsigned char * buf, unsigned int buf_length, unsigned int * payload_length, unsigned int * payload_buf_length);
+
+//making sender_buf
+void num_to_var_length_int(unsigned int data_length, unsigned char * payload_buf, unsigned char * buf_len);
+void make_buffer_header(unsigned char *data, unsigned int data_length, unsigned char MESSAGE_TYPE, unsigned char *header, unsigned int * header_length);
+void concat_buffer_header_and_payload(unsigned char *header, unsigned int header_length, unsigned char *payload, unsigned int payload_length, unsigned char *ret, unsigned int * ret_length);
+void make_sender_buf(unsigned char *payload, unsigned int payload_length, unsigned char MESSAGE_TYPE, unsigned char *sender, unsigned int * sender_length);
+
+//connection
+void connect_as_client(const char * ip_addr, const char * port_num, int * sock);
 
 #endif

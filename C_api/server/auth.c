@@ -1,5 +1,7 @@
 #include "auth.h"
 
+
+
 void send_session_key_request_check_protocol(helper_options_server *helper_options, callback_params_server *callback_params){
     int option;
     option = 1; //TODO: temp
@@ -18,6 +20,13 @@ void send_session_key_request_check_protocol(helper_options_server *helper_optio
     }
 }
 
+unsigned char * parse_received_message(unsigned char * received_buf, unsigned int received_buf_length, unsigned char * message_type, unsigned int * data_buf_length){
+    *message_type = received_buf[0];
+    unsigned int payload_buf_length; 
+    var_length_int_to_num_t(received_buf + 1, received_buf_length, data_buf_length, &payload_buf_length);
+    return received_buf + 1 + payload_buf_length; //msgtype+payload_buf_length;
+}
+
 void send_session_key_req_via_TCP(helper_options_server *helper_options, callback_params_server *callback_params){
     
     const char * IP_ADDRESS = "127.0.0.1";
@@ -31,6 +40,10 @@ void send_session_key_req_via_TCP(helper_options_server *helper_options, callbac
         //messageø° ¿˙¿Â
 	    auth_received.received_buf_length=read(sock, auth_received.received_buf, sizeof(auth_received.received_buf)-1);
         // check_read_error(auth_received.received_buf_length);
+        // unsigned char message_type;
+        // unsigned int data_buf_length;
+        // unsigned char * data_buf = parse_received_message(auth_received.received_buf, auth_received.received_buf_length, &message_type, &data_buf_length);
+        // print_in_hex(data_buf, data_buf_length);
         parse_IoT_SP(&auth_received);
     
         if (auth_received.message_type == AUTH_HELLO){

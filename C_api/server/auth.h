@@ -73,4 +73,8 @@ void parse_session_key_response(session_key_response *session_key_response, UCHA
 UINT parse_session_key(parsed_session_key *ret, UCHAR *buf, UINT buf_length);
 bool check_session_key(received * received, UINT key_Id);
 
+
+unsigned char * parse_received_message(unsigned char * received_buf, unsigned int received_buf_length, unsigned char * message_type, unsigned int * data_buf_length);
+
+
 #endif // AUTH_H

@@ -3,11 +3,12 @@ common -> crypto -> secure_server, secure_client -> main
 
 # writing function rules
 
-void function(return_pointer, input ...)
+void function(input ..., return_pointer, return_length)
 
-every return and input buffers and lengths input with pointers
+input buf, return_buf, return_buf_length: pointer
+input length: unsigned int
 
-void function(unsigned char * ret, unsigned int * ret_length, unsigned char * input_buf, unsigned int * input_buf_length)
+void function(unsigned char * input_buf, unsigned int input_buf_length, unsigned char * ret, unsigned int * ret_length)
 
 # C API
 

@@ -97,7 +97,7 @@ void * scan_command(){
 
 //make header + payload
 
-void num_to_var_length_int(payload_length_t *buf){
+void num_to_var_length_int_t(payload_length_t *buf){
     int num = buf->num;
     buf->buf_len= 1;
     while(num > 127)
@@ -107,6 +107,17 @@ void num_to_var_length_int(payload_length_t *buf){
         num >>=7;
     }
     buf->buf[buf->buf_len-1] = num;
+}
+
+void num_to_var_length_int(unsigned int data_length, unsigned char * payload_buf, unsigned char * buf_len){
+    *buf_len= 1;
+    while(data_length > 127)
+    {
+        payload_buf[*buf_len-1] = 128 | data_length & 127;
+        *buf_len += 1;
+        data_length >>=7;
+    }
+    payload_buf[*buf_len-1] = data_length;
 }
 
 void var_length_int_to_num(UCHAR * buf, UINT buf_length, payload_length_t * payload_length, int offset){
@@ -121,13 +132,36 @@ void var_length_int_to_num(UCHAR * buf, UINT buf_length, payload_length_t * payl
     }
 }
 
-void make_buffer_header(UCHAR *header, UINT * header_length, UCHAR *payload, UINT payload_length, UCHAR MESSAGE_TYPE){
+
+
+void var_length_int_to_num_t(unsigned char * buf, unsigned int buf_length, unsigned int * payload_length, unsigned int * payload_buf_length){
+    unsigned int num = 0;
+    *payload_buf_length = 0;
+    for( int i = 0; i < buf_length; i++) { 
+        num |= (buf[i] & 127) << (7 * i);
+        if ((buf[i] & 128) == 0) {
+            *payload_length = num;
+            *payload_buf_length= i +1;
+            break;
+        }
+    }
+}
+
+void make_buffer_header_t(UCHAR *header, UINT * header_length, UCHAR *payload, UINT payload_length, UCHAR MESSAGE_TYPE){
     payload_length_t payload_length_buf; //without struct, error
     payload_length_buf.num = payload_length;
-    num_to_var_length_int(&payload_length_buf);
+    num_to_var_length_int_t(&payload_length_buf);
     *header_length = MSG_TYPE_SIZE + payload_length_buf.buf_len;
     header[0] = MESSAGE_TYPE;
     memcpy(header + MSG_TYPE_SIZE, payload_length_buf.buf, payload_length_buf.buf_len);
+}
+void make_buffer_header(unsigned char *header, unsigned int * header_length, unsigned char *data, unsigned int data_length, unsigned char MESSAGE_TYPE){
+    unsigned char payload_buf[5]; //快急 5byte肺 棱扁.
+    unsigned char payload_buf_len;
+    num_to_var_length_int(data_length, payload_buf, &payload_buf_len);
+    *header_length = MSG_TYPE_SIZE + payload_buf_len;
+    header[0] = MESSAGE_TYPE;
+    memcpy(header + MSG_TYPE_SIZE, payload_buf, payload_buf_len);
 }
 
 void concat_buffer_header_and_payload(UCHAR *ret, UINT * ret_length, UCHAR *header, UINT header_length, UCHAR *payload, UINT payload_length){
@@ -277,11 +311,20 @@ void symmetric_encrypt_authenticate(UCHAR * ret, UINT * ret_length, UCHAR * buf,
     UINT iv_length;
     iv_length = AES_BLOCK_SIZE;
     generate_nonce(iv, iv_length);
-    UCHAR encrypted[512];
-    UINT encrypted_length;
+    UINT test_length = ((buf_length/iv_length)+1)*16;
+    printf("test_length: %d", test_length);
+    unsigned int encrypted_length = ((buf_length/iv_length)+1)*16;
+    unsigned char * encrypted = (unsigned char *) malloc(encrypted_length);
+    // UCHAR encrypted[512];
+    // UINT encrypted_length;
     AES_CBC_128_encrypt(encrypted, &encrypted_length, buf, buf_length, symmetric_key_set->cipher_key_val, symmetric_key_set->cipher_key_val_length,iv, iv_length);
-    UCHAR temp[512];
-    UINT temp_length;
+    printf("encrypted_length: %d\nbuf_length: %d\n", encrypted_length, buf_length);
+    unsigned int temp_length = ((buf_length/iv_length)+1)*16 + 16;
+    unsigned char * temp = (unsigned char *) malloc(temp_length);
+    unsigned int testt = sizeof(temp);
+    printf("sizeof(temp): %d \n", testt);
+    // UCHAR temp[512];
+    // UINT temp_length;
     memcpy(temp, iv, iv_length);
     memcpy(temp+iv_length, encrypted, encrypted_length);
     temp_length = iv_length + encrypted_length;
@@ -289,9 +332,12 @@ void symmetric_encrypt_authenticate(UCHAR * ret, UINT * ret_length, UCHAR * buf,
     UCHAR tag[512];
     UINT tag_length;
     HMAC(EVP_sha256(), symmetric_key_set->mac_key_val, symmetric_key_set->mac_key_val_length, temp, temp_length, tag, &tag_length );
+   
     memcpy(ret, temp, temp_length);
     memcpy(ret + temp_length, tag, tag_length);
     *ret_length = temp_length + tag_length;
+    free(encrypted);
+    free(temp);
 }
 
 void symmetric_decrypt_authenticate(UCHAR * ret, UINT *ret_length, UCHAR * buf, UINT buf_length, key_set* symmetric_key_set){ //TODO: add options.distributionCryptoSpec, TODO: may need to change sturct
@@ -351,7 +397,7 @@ void symmetric_decrypt_authenticate(UCHAR * ret, UINT *ret_length, UCHAR * buf, 
 
 void connection(int * sock, const char * ip_addr, const char * port_num){
     struct sockaddr_in serv_addr;
-    received first_received;
+
     int str_len;
 
     //家南 积己
